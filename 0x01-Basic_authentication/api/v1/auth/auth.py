@@ -1,11 +1,13 @@
-""" auth module
+#!/usr/bin/env python3
+"""Authentication module for the API.
 """
-from flask import request
-from typing import List, TypeVar
 import re
+from typing import List, TypeVar
+from flask import request
+
 
 class Auth:
-    """ auth class for auth system
+    """Authentication class.
     """
     def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
         """Checks if a path requires authentication.
@@ -24,15 +26,13 @@ class Auth:
         return True
 
     def authorization_header(self, request=None) -> str:
-        """ public method
+        """Gets the authorization header field from the request.
         """
-        if request is None:
-            return None
-        if 'Authorization' not in request.headers:
-            return None
-        return request.headers.get('Authorization')
+        if request is not None:
+            return request.headers.get('Authorization', None)
+        return None
 
     def current_user(self, request=None) -> TypeVar('User'):
-        """ public method
+        """Gets the current user from the request.
         """
         return None
