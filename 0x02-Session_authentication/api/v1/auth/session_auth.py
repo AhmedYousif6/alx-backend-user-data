@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """ Session Auth system module
 """
 from .auth import Auth
