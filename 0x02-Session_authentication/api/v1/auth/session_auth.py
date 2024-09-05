@@ -6,6 +6,7 @@ import uuid
 from flask import request
 from models.user import User
 
+
 class SessionAuth(Auth):
     """ session auth class inherits from base template Auth
     """
