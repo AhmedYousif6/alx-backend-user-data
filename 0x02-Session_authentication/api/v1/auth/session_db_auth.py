@@ -38,7 +38,7 @@ class SessionDBAuth(SessionExpAuth):
             return None
         cur_time = datetime.now()
         time_span = timedelta(seconds=self.session_duration)
-        exp_time = sesssions[0].created_at + time_span
+        exp_time = sessions[0].created_at + time_span
         if exp_time < cur_time:
             return None
         return sessions[0].user_id
@@ -48,7 +48,7 @@ class SessionDBAuth(SessionExpAuth):
         """
         session_id = self.session_cookie(request)
         try:
-            sessions = UserSeesion.search({'session_id': session_id})
+            sessions = UserSession.search({'session_id': session_id})
         except Exception:
             return False
         if len(sessions) <= 0:
