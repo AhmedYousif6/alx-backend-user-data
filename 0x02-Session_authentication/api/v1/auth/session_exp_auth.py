@@ -4,16 +4,18 @@
 import os
 from flask import request
 from datetime import datetime, timedelta
+
 from .session_auth import SessionAuth
 
 
 class SessionExpAuth(SessionAuth):
     """Session authentication class with expiration.
     """
-    def __init__(self):
+
+    def __init__(self) -> None:
         """Initializes a new SessionExpAuth instance.
         """
-        super().__init()
+        super().__init__()
         try:
             self.session_duration = int(os.getenv('SESSION_DURATION', '0'))
         except Exception:
@@ -26,12 +28,12 @@ class SessionExpAuth(SessionAuth):
         if type(session_id) != str:
             return None
         self.user_id_by_session_id[session_id] = {
-                'user_id': user_id,
-                'created_at': datetime..now()
+            'user_id': user_id,
+            'created_at': datetime.now(),
         }
         return session_id
 
-    def user_id_for_session_id(self, session_id=None):
+    def user_id_for_session_id(self, session_id=None) -> str:
         """Retrieves the user id of the user associated with
         a given session id.
         """
@@ -41,9 +43,9 @@ class SessionExpAuth(SessionAuth):
                 return session_dict['user_id']
             if 'created_at' not in session_dict:
                 return None
-            curr_time = datetime.now()
+            cur_time = datetime.now()
             time_span = timedelta(seconds=self.session_duration)
             exp_time = session_dict['created_at'] + time_span
-            if exp_time < curr_time:
+            if exp_time < cur_time:
                 return None
             return session_dict['user_id']
