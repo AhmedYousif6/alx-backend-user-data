@@ -1,31 +1,33 @@
 #!/usr/bin/env python3
-"""DB module.
 """
-from sqlalchemy import create_engine, tuple_
-from sqlalchemy.exc import InvalidRequestError
+DB module
+"""
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import InvalidRequestError
 
 from user import Base, User
 
 
 class DB:
-    """DB class.
+    """DB class
     """
 
     def __init__(self) -> None:
-        """Initialize a new DB instance.
+        """Initialize a new DB instance
         """
-        self._engine = create_engine("sqlite:///a.db", echo=False)
+        self._engine = create_engine("sqlite:///a.db",
+                                     echo=False)
         Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
         self.__session = None
 
     @property
     def _session(self) -> Session:
-        """Memoized session object.
+        """Memoized session object
         """
         if self.__session is None:
             DBSession = sessionmaker(bind=self._engine)
@@ -33,48 +35,55 @@ class DB:
         return self.__session
 
     def add_user(self, email: str, hashed_password: str) -> User:
-        """Adds a new user to the database.
         """
-        try:
-            new_user = User(email=email, hashed_password=hashed_password)
-            self._session.add(new_user)
-            self._session.commit()
-        except Exception:
-            self._session.rollback()
-            new_user = None
-        return new_user
+        Create a User object and save it to the database
+        Args:
+            email (str): user's email address
+            hashed_password (str): password hashed by bcrypt's hashpw
+        Return:
+            Newly created User object
+        """
+        user = User(email=email, hashed_password=hashed_password)
+        self._session.add(user)
+        self._session.commit()
+        return user
 
     def find_user_by(self, **kwargs) -> User:
-        """Finds a user based on a set of filters.
         """
-        fields, values = [], []
-        for key, value in kwargs.items():
-            if hasattr(User, key):
-                fields.append(getattr(User, key))
-                values.append(value)
-            else:
-                raise InvalidRequestError()
-        result = self._session.query(User).filter(
-            tuple_(*fields).in_([tuple(values)])
-        ).first()
-        if result is None:
-            raise NoResultFound()
-        return result
+        Return a user who has an attribute matching the attributes passed
+        as arguments
+        Args:
+            attributes (dict): a dictionary of attributes to match the user
+        Return:
+            matching user or raise error
+        """
+        all_users = self._session.query(User)
+        for k, v in kwargs.items():
+            if k not in User.__dict__:
+                raise InvalidRequestError
+            for usr in all_users:
+                if getattr(usr, k) == v:
+                    return usr
+        raise NoResultFound
 
     def update_user(self, user_id: int, **kwargs) -> None:
-        """Updates a user based on a given id.
         """
-        user = self.find_user_by(id=user_id)
-        if user is None:
-            return
-        update_source = {}
-        for key, value in kwargs.items():
-            if hasattr(User, key):
-                update_source[getattr(User, key)] = value
+        Update a user's attributes
+        Args:
+            user_id (int): user's id
+            kwargs (dict): dict of key, value pairs representing the
+                           attributes to update and the values to update
+                           them with
+        Return:
+            No return value
+        """
+        try:
+            usr = self.find_user_by(id=user_id)
+        except NoResultFound:
+            raise ValueError()
+        for k, v in kwargs.items():
+            if hasattr(usr, k):
+                setattr(usr, k, v)
             else:
-                raise ValueError()
-        self._session.query(User).filter(User.id == user_id).update(
-            update_source,
-            synchronize_session=False,
-        )
+                raise ValueError
         self._session.commit()
